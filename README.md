@@ -1,10 +1,8 @@
 # Orchestrator
 
-Reusable Codex + OpenCode Go multi-agent setup.
+Codex + OpenCode Go multi-agent setup.
 
 This repository installs a global `opencode-agent` wrapper and a Codex instruction block so Codex can act as the orchestrator while OpenCode Go models handle bounded implementation and review work.
-
-No secrets are stored in this repository.
 
 ## What This Sets Up
 
