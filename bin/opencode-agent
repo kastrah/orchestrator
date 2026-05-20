@@ -1,0 +1,107 @@
+#!/usr/bin/env bash
+set -euo pipefail
+
+usage() {
+  cat <<'USAGE'
+Usage:
+  opencode-agent <role> "<task prompt>"
+  echo "<task prompt>" | opencode-agent <role>
+  opencode-agent <role> --dry-run "<task prompt>"
+
+Roles:
+  implement       DeepSeek V4 Flash, default high-volume implementer
+  implement-pro   DeepSeek V4 Pro, complex implementation
+  review          MiMo v2.5 Pro, default reviewer
+  review-glm      GLM 5.1, high-risk targeted reviewer
+
+Environment:
+  OPENCODE_AGENT_MODEL   Override the role model with provider/model
+  OPENCODE_AGENT_FORMAT  default or json
+  OPENCODE_AGENT_DIR     Project directory, defaults to git root or current directory
+
+Examples:
+  opencode-agent implement "Fix the failing unit test. Report files changed and tests run."
+  opencode-agent review "Review the current git diff. Findings only, ordered by severity."
+USAGE
+}
+
+if [[ $# -lt 1 ]]; then
+  usage >&2
+  exit 2
+fi
+
+role="$1"
+shift
+
+case "$role" in
+  implement)
+    model="opencode-go/deepseek-v4-flash"
+    ;;
+  implement-pro)
+    model="opencode-go/deepseek-v4-pro"
+    ;;
+  review)
+    model="opencode-go/mimo-v2.5-pro"
+    ;;
+  review-glm)
+    model="opencode-go/glm-5.1"
+    ;;
+  -h|--help|help)
+    usage
+    exit 0
+    ;;
+  *)
+    echo "Unknown role: $role" >&2
+    usage >&2
+    exit 2
+    ;;
+esac
+
+dry_run="false"
+if [[ "${1:-}" == "--dry-run" ]]; then
+  dry_run="true"
+  shift
+fi
+
+model="${OPENCODE_AGENT_MODEL:-$model}"
+format="${OPENCODE_AGENT_FORMAT:-default}"
+
+if [[ "$format" != "default" && "$format" != "json" ]]; then
+  echo "OPENCODE_AGENT_FORMAT must be 'default' or 'json'" >&2
+  exit 2
+fi
+
+if [[ $# -gt 0 ]]; then
+  prompt="$*"
+else
+  prompt="$(cat)"
+fi
+
+if [[ -z "${prompt//[[:space:]]/}" ]]; then
+  echo "Task prompt is required" >&2
+  usage >&2
+  exit 2
+fi
+
+if [[ -n "${OPENCODE_AGENT_DIR:-}" ]]; then
+  project_dir="$OPENCODE_AGENT_DIR"
+else
+  project_dir="$(git rev-parse --show-toplevel 2>/dev/null || pwd)"
+fi
+
+if [[ "$dry_run" == "true" ]]; then
+  printf 'role=%s\nmodel=%s\nformat=%s\ndir=%s\n' "$role" "$model" "$format" "$project_dir"
+  exit 0
+fi
+
+if ! command -v opencode >/dev/null 2>&1; then
+  echo "opencode is not installed or is not on PATH." >&2
+  echo "Install OpenCode first: https://opencode.ai/docs/" >&2
+  exit 127
+fi
+
+exec opencode run \
+  --model "$model" \
+  --dir "$project_dir" \
+  --format "$format" \
+  "$prompt"
