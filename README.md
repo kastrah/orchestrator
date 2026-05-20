@@ -85,7 +85,22 @@ Verify the install:
 
 ## Usage
 
-From any project directory:
+Talk to Codex normally. You do not need to prefix messages with `implement`
+or `review` unless you want to force a specific model. After install, Codex
+reads the routing instructions in `~/.codex/AGENTS.md` and decides when to
+delegate to a worker agent.
+
+To force a specific model, start your message with a role prefix:
+
+```text
+implement Fix the failing unit test.
+implement-pro Refactor the shared auth flow.
+review Review the current git diff.
+review-glm Review auth and billing risks.
+```
+
+The global wrapper `~/.codex/bin/opencode-agent` is the tool Codex uses
+internally. You can also invoke it directly from any project directory:
 
 ```bash
 ~/.codex/bin/opencode-agent implement "Fix the failing unit test. Report files changed and tests run."
@@ -121,6 +136,53 @@ Override the directory:
 ```bash
 OPENCODE_AGENT_DIR=/path/to/project ~/.codex/bin/opencode-agent implement "Task prompt"
 ```
+
+## Help
+
+### How to use this setup
+
+Talk to Codex normally. You do not need to say `implement` or `review` in
+your message unless you want to force a specific model. After install, Codex
+reads the routing instructions in `~/.codex/AGENTS.md` and decides whether
+and how to delegate.
+
+To force a model, prefix your request:
+
+```text
+implement Fix the failing unit test.
+implement-pro Refactor the shared auth flow.
+review Review the current diff.
+review-glm Review auth and billing risks.
+```
+
+The global wrapper can also be invoked directly from your terminal — see
+the [Usage](#usage) section above for examples.
+
+### Troubleshooting
+
+**opencode not found on PATH**
+
+```bash
+opencode providers list
+```
+
+If the command is not found, install OpenCode from
+[https://opencode.ai/docs/](https://opencode.ai/docs/).
+
+**Wrapper routing is wrong or you want to preview before running**
+
+```bash
+~/.codex/bin/opencode-agent implement --dry-run "Do not edit files. Reply READY."
+```
+
+This prints the resolved role, model, format, and project directory
+without spending a model request.
+
+### Reference
+
+- [Help](docs/help.md) — quick start, forcing a model, troubleshooting
+- [Routing policy](docs/routing-policy.md) — model roles, escalation rules, prompt shape
+- [Worker prompt templates](docs/worker-prompts.md) — reusable prompt patterns
 
 ## Updating
 
