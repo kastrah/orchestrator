@@ -149,9 +149,7 @@ Remove the marked block from `~/.codex/AGENTS.md`:
 <!-- opencode-agent-routing:end -->
 ```
 
-## Notes For Other Users
-
-This setup does not include credentials or secrets. Each user must authenticate OpenCode on their own machine.
+## Notes
 
 If OpenCode Go model names change, update:
 
